@@ -29,7 +29,7 @@
             flex-direction: column;
             gap: 10px;
         }
-        input, select, textarea {
+        input, select, button {
             padding: 10px;
             border-radius: 5px;
             border: 1px solid #800080;
@@ -43,57 +43,114 @@
         button:hover {
             background-color: #4B0082;
         }
+        .error {
+            color: red;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Solicitud de Préstamo</h1>
         <p>Completa el siguiente formulario para solicitar tu préstamo en línea.</p>
-        <form action="https://formspree.io/f/xzzedggg" method="POST" onsubmit="return validateForm()">
-            <input type="text" name="nombre" placeholder="Nombre completo" required>
-            <input type="date" name="fecha_nacimiento" placeholder="Fecha de nacimiento" required>
-            <input type="text" name="curp" id="curp" placeholder="CURP" required>
-            <input type="tel" name="telefono" placeholder="Número de teléfono" pattern="[0-9]{10}" required>
-            <input type="email" name="correo" placeholder="Correo electrónico" required>
-            <textarea name="direccion" placeholder="Dirección" required></textarea>
-            <input type="text" name="dedicacion" placeholder="¿A qué te dedicas?" required>
-            <input type="number" name="ingresos" placeholder="Ingresos mensuales" min="0" required>
-            <input type="number" name="monto" placeholder="Monto solicitado" min="200" max="5000" required>
-            <select name="plazo" required>
-                <option value="">Selecciona el plazo del préstamo</option>
-                <option value="1">1 quincena</option>
-                <option value="2">2 quincenas</option>
-                <option value="4">4 quincenas</option>
-                <option value="6">6 quincenas</option>
+        <form id="loanForm" action="https://formspree.io/f/xzzedggg" method="POST" onsubmit="return validarFormulario()">
+            <input type="text" id="nombre" name="nombre" placeholder="Nombre completo" required>
+            <input type="date" id="fechaNacimiento" name="fechaNacimiento" required>
+            <input type="text" id="curp" name="curp" placeholder="CURP" required>
+            <input type="tel" id="telefono" name="telefono" placeholder="Número de teléfono" required>
+            <input type="email" id="email" name="email" placeholder="Correo electrónico" required>
+            <input type="text" id="direccion" name="direccion" placeholder="Dirección" required>
+            <input type="text" id="ocupacion" name="ocupacion" placeholder="A qué te dedicas" required>
+            <input type="number" id="ingresos" name="ingresos" placeholder="Ingresos mensuales" required>
+            <input type="number" id="monto" name="monto" placeholder="Monto solicitado" required min="200" max="5000">
+            <select id="plazo" name="plazo" required>
+                <option value="">Selecciona el plazo</option>
+                <option value="7">7 días</option>
+                <option value="14">14 días</option>
+                <option value="21">21 días</option>
+                <option value="28">28 días</option>
+                <option value="35">35 días</option>
+                <option value="42">42 días</option>
+                <option value="49">49 días</option>
+                <option value="56">56 días</option>
+                <option value="63">63 días</option>
+                <option value="70">70 días</option>
+                <option value="77">77 días</option>
+                <option value="84">84 días</option>
+                <option value="91">91 días</option>
             </select>
-            <input type="submit" value="Solicitar Préstamo">
+            <select id="frecuenciaPago" name="frecuenciaPago" required>
+                <option value="">Selecciona la frecuencia de pago</option>
+                <option value="semanal">Semanal</option>
+                <option value="quincenal">Quincenal</option>
+                <option value="unico">Pago único (Solo préstamos de 28 días o menos)</option>
+            </select>
+            <button type="submit">Enviar Solicitud</button>
+            <div id="errorMessages" class="error"></div>
         </form>
     </div>
 
     <script>
-        // Función para validar que la persona tenga más de 18 años
-        function validateForm() {
-            var fechaNacimiento = new Date(document.forms[0]["fecha_nacimiento"].value);
-            var today = new Date();
-            var edad = today.getFullYear() - fechaNacimiento.getFullYear();
-            var m = today.getMonth() - fechaNacimiento.getMonth();
+        function validarFormulario() {
+            let telefono = document.getElementById('telefono').value;
+            let curp = document.getElementById('curp').value;
+            let email = document.getElementById('email').value;
+            let fechaNacimiento = document.getElementById('fechaNacimiento').value;
+            let plazo = parseInt(document.getElementById('plazo').value);
+            let frecuenciaPago = document.getElementById('frecuenciaPago').value;
+            let errorMessages = document.getElementById('errorMessages');
+            errorMessages.innerHTML = "";
 
-            // Si el mes actual es menor que el mes de nacimiento, o si es el mismo mes pero aún no ha pasado el día
-            if (m < 0 || (m === 0 && today.getDate() < fechaNacimiento.getDate())) {
+            if (!/^\d{10}$/.test(telefono)) {
+                errorMessages.innerHTML += "El número de teléfono debe tener 10 dígitos.<br>";
+                return false;
+            }
+            if (curp.length !== 18) {
+                errorMessages.innerHTML += "El CURP debe tener 18 caracteres.<br>";
+                return false;
+            }
+
+            let emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            if (!emailRegex.test(email)) {
+                errorMessages.innerHTML += "El correo electrónico no es válido.<br>";
+                return false;
+            }
+
+            let fechaNacimientoObj = new Date(fechaNacimiento);
+            let edad = new Date().getFullYear() - fechaNacimientoObj.getFullYear();
+            let mes = new Date().getMonth() - fechaNacimientoObj.getMonth();
+            if (mes < 0 || (mes === 0 && new Date().getDate() < fechaNacimientoObj.getDate())) {
                 edad--;
             }
-
             if (edad < 18) {
-                alert("Debes ser mayor de 18 años para solicitar un préstamo.");
-                return false; // No enviamos el formulario
+                errorMessages.innerHTML += "Debes ser mayor de 18 años para solicitar el préstamo.<br>";
+                return false;
             }
 
-            return true; // Enviar el formulario si es mayor de 18 años
+            if (frecuenciaPago === "unico" && plazo > 28) {
+                errorMessages.innerHTML += "El pago único solo está disponible para plazos de 28 días o menos.<br>";
+                return false;
+            }
+
+            return true;
         }
 
-        // Aseguramos que el campo de CURP acepte minúsculas
-        document.getElementById("curp").addEventListener("input", function() {
-            this.value = this.value.toUpperCase(); // Convierte el CURP a mayúsculas automáticamente
+        document.getElementById('plazo').addEventListener('change', function() {
+            let plazo = parseInt(this.value);
+            let frecuenciaPago = document.getElementById('frecuenciaPago');
+            
+            if (plazo > 28 && frecuenciaPago.value === "unico") {
+                alert("El pago único solo está disponible para plazos de 28 días o menos.");
+                frecuenciaPago.value = ""; // Restablece la selección
+            }
+        });
+
+        document.getElementById('frecuenciaPago').addEventListener('change', function() {
+            let plazo = parseInt(document.getElementById('plazo').value);
+            if (this.value === "unico" && plazo > 28) {
+                alert("El pago único solo está disponible para plazos de 28 días o menos.");
+                this.value = ""; // Restablece la selección
+            }
         });
     </script>
 </body>
